@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Net;
 using UnityEngine;
 
 public class FTPComponent : MonoBehaviour
@@ -81,6 +78,14 @@ public class FTPComponent : MonoBehaviour
         
         FTPMgr.Instance.DownloadFile("pic.png",Application.persistentDataPath + "/DownloadPic.png", () => {
             print("Finish downloading");
+        });
+
+        FTPMgr.Instance.DeleteFile("Test.txt", (result) => {
+            print(result? "Delete success" : "Delete failed");
+        });
+        
+        FTPMgr.Instance.GetFileSize("pic.png", (result) => {
+            print("Size = " + result);
         });
     }
 }

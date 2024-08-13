@@ -14,6 +14,8 @@ public class FTPMgr
     // TODO change to real username and password
     private string USER_NAME = "xxx";
     private string PASSWORD = "xxx";
+    
+    // Multi thread to avoid blocking main thread
 
     public async void DownloadFile(string fileName, string remotePath, UnityAction action = null)
     {
@@ -50,8 +52,7 @@ public class FTPMgr
             action?.Invoke();
         });
     }
-
-    // Multi thread upload to avoid blocking main thread
+    
     public async void UploadFile(string fileName, string localPath, UnityAction action = null)
     {
         await Task.Run(() => {
@@ -86,5 +87,53 @@ public class FTPMgr
             }
         });
         action?.Invoke();
+    }
+
+    public async void GetFileSize(string fileName, UnityAction<long> action = null)
+    {
+        await Task.Run(() => {
+            try
+            {
+                FtpWebRequest req = FtpWebRequest.Create(new Uri(FTP_PATH + fileName)) as FtpWebRequest;
+                req.Credentials = new NetworkCredential(USER_NAME, PASSWORD);
+                req.KeepAlive = false;
+                req.UseBinary = true;
+                req.Method = WebRequestMethods.Ftp.GetFileSize ;
+                req.Proxy = null;
+
+                FtpWebResponse res = req.GetResponse() as FtpWebResponse;
+                action?.Invoke(res.ContentLength);
+                res.Close();
+            }
+            catch (Exception e)
+            {
+                Debug.Log("REMOVE FAILED " + e.Message);
+                action?.Invoke(0);
+            }
+        });
+    }
+
+    public async void DeleteFile(string fileName, UnityAction<bool> action = null)
+    {
+        await Task.Run(() => {
+            try
+            {
+                FtpWebRequest req = FtpWebRequest.Create(new Uri(FTP_PATH + fileName)) as FtpWebRequest;
+                req.Credentials = new NetworkCredential(USER_NAME, PASSWORD);
+                req.KeepAlive = false;
+                req.UseBinary = true;
+                req.Method = WebRequestMethods.Ftp.DeleteFile;
+                req.Proxy = null;
+
+                FtpWebResponse res = req.GetResponse() as FtpWebResponse;
+                res.Close();
+                action?.Invoke(true);
+            }
+            catch (Exception e)
+            {
+                Debug.Log("REMOVE FAILED " + e.Message);
+                action?.Invoke(false);
+            }
+        });
     }
 }
